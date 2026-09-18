@@ -65,6 +65,7 @@ Greenhouse and Lever provide trusted job listings, while Adzuna is used as a fal
 
 ## System Architecture
 
+```text
                          User
                            |
                            v
@@ -91,7 +92,7 @@ Greenhouse and Lever provide trusted job listings, while Adzuna is used as a fal
                   v
        Semantic Similarity + Role
           Relevance + Ranking
-
+```
 
 ---
 
@@ -115,7 +116,7 @@ Sentence Transformer model.
 
 Resume and job descriptions are converted into embeddings and compared using cosine similarity.
 
-   text
+```text
 Resume
    |
    v
@@ -125,7 +126,7 @@ Resume Embedding
    |              ^
    v              |
 Job Description -> Job Embedding
-
+```
 
 The ranking system combines semantic similarity with role relevance to determine the final job ranking.
 
@@ -133,7 +134,7 @@ The ranking system combines semantic similarity with role relevance to determine
 
 ## Job Recommendation Pipeline
 
-   text
+```text
 User uploads Resume
         |
         v
@@ -174,7 +175,7 @@ Job Ranking
         |
         v
 Top N Recommendations
-
+```
 
 ---
 
@@ -223,6 +224,7 @@ Top N Recommendations
 
 ## Project Structure
 
+```text
 Job-Sphere/
 |
 ├── backend/
@@ -290,7 +292,7 @@ Job-Sphere/
 |
 ├── .gitignore
 └── README.md
-
+```
 
 ---
 
