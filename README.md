@@ -1,196 +1,576 @@
-# Job Scraper
+# JobSphere
 
-A full-stack job scraping application that allows users to search for job listings from various sources.
+## AI-Powered Resume Analysis & Personalized Job Discovery Platform
+
+JobSphere is a full-stack career assistance platform that analyzes a user's resume using AI and helps discover relevant job opportunities based on their skills, experience, target roles, and preferences.
+
+Instead of relying only on keyword matching, JobSphere combines AI-powered resume analysis with semantic similarity using Sentence Transformers to identify and rank jobs that are relevant to the user's profile.
+
+---
+
+## Features
+
+### Resume Analysis
+- Upload resumes in PDF or DOCX format
+- Automatic resume text extraction
+- OCR fallback for scanned/image-based PDF resumes
+- AI-powered resume analysis using Google Gemini
+- Extraction of skills, education, experience, projects, certifications, target roles, and resume insights
+
+### AI-Powered Job Matching
+- Semantic matching between resumes and job descriptions
+- Sentence Transformer embeddings
+- Cosine similarity
+- Target-role relevance analysis
+- Personalized job ranking
+
+### Personalized Job Search
+Users can control their search using:
+- Location
+- Job type
+- Experience level
+- Work mode
+- Number of recommendations
+
+Available recommendation counts:
+- Top 5
+- Top 10
+- Top 15
+- Top 20
+
+### Trusted Job Sources
+JobSphere currently integrates with:
+- Greenhouse
+- Lever
+- Adzuna
+
+Greenhouse and Lever provide trusted job listings, while Adzuna is used as a fallback source for additional opportunities.
+
+### Authentication & Security
+- User registration and login
+- JWT-based authentication
+- Password hashing with bcrypt
+- Protected API routes
+- User-specific resume authorization
+- Change password functionality
+- Request rate limiting
+- Helmet security middleware
+- Restricted CORS
+- Input validation
+- Resume file validation
+- Prompt-injection protection
+- Environment variables for API keys
+
+---
+
+## System Architecture
+
+                         User
+                           |
+                           v
+                  React + Vite Frontend
+                           |
+                       REST API
+                           |
+                           v
+                  Node.js + Express
+                    /           \
+                   /             \
+                  v               v
+             MongoDB          Google Gemini
+          Users & Resumes     Resume Analysis
+                  |
+                  |
+                  v
+              Python ML Service
+                  |
+                  v
+        Sentence Transformers
+          all-MiniLM-L6-v2
+                  |
+                  v
+       Semantic Similarity + Role
+          Relevance + Ranking
+
+
+---
+
+## AI/ML Implementation
+
+### Resume Analysis
+
+Google Gemini is used to analyze uploaded resume content and extract structured career information.
+
+The resume is treated as untrusted user-provided data. The analysis pipeline instructs the model to analyze only the resume content and ignore instructions that may appear inside the uploaded document.
+
+### Semantic Job Matching
+
+JobSphere uses the pretrained:
+
+```text
+all-MiniLM-L6-v2
+```
+
+Sentence Transformer model.
+
+Resume and job descriptions are converted into embeddings and compared using cosine similarity.
+
+   text
+Resume
+   |
+   v
+Resume Embedding
+   |
+   |       Cosine Similarity
+   |              ^
+   v              |
+Job Description -> Job Embedding
+
+
+The ranking system combines semantic similarity with role relevance to determine the final job ranking.
+
+---
+
+## Job Recommendation Pipeline
+
+   text
+User uploads Resume
+        |
+        v
+Resume Text Extraction
+        |
+        v
+Gemini Resume Analysis
+        |
+        v
+Target Roles Identified
+        |
+        v
+Fetch Jobs from Trusted Sources
+        |
+        +----> Greenhouse
+        |
+        +----> Lever
+        |
+        +----> Adzuna Fallback
+        |
+        v
+Remove Duplicate Jobs
+        |
+        v
+Apply User Filters
+        |
+        v
+Python ML Service
+        |
+        v
+Role Relevance Analysis
+        |
+        v
+Resume <-> Job Semantic Similarity
+        |
+        v
+Job Ranking
+        |
+        v
+Top N Recommendations
+
+
+---
+
+## Technology Stack
+
+### Frontend
+- React.js
+- Vite
+- Tailwind CSS
+- Axios
+- React Router
+- React Dropzone
+- Recharts
+- React Icons
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT
+- bcrypt
+- Multer
+- pdf-parse
+- Mammoth
+- Tesseract.js
+- Axios
+- Helmet
+- express-rate-limit
+
+### AI / Machine Learning
+- Python
+- FastAPI
+- Sentence Transformers
+- scikit-learn
+- all-MiniLM-L6-v2
+- Cosine Similarity
+- Google Gemini
+
+### Job APIs
+- Greenhouse
+- Lever
+- Adzuna
+
+---
 
 ## Project Structure
 
-```
-Job-Scraper/
+Job-Sphere/
+|
 ├── backend/
-│   ├── api/
-│   │   ├── routes/
-│   │   └── schemas.py
-│   ├── config/
-│   │   └── database.py
-│   ├── database/
-│   │   └── models.py
-│   ├── parsers/
-│   ├── scrapers/
-│   ├── services/
-│   ├── tests/
-│   ├── utils/
-│   ├── main.py
-│   └── seed_db.py
+|   ├── controllers/
+|   |   └── authController.js
+|   |
+|   ├── middleware/
+|   |   ├── authMiddleware.js
+|   |   └── resumeAuthorization.js
+|   |
+|   ├── models/
+|   |   ├── Resume.js
+|   |   └── User.js
+|   |
+|   ├── routes/
+|   |   ├── authRoutes.js
+|   |   ├── jobRoutes.js
+|   |   └── resumeRoutes.js
+|   |
+|   ├── services/
+|   |   ├── jobRecommendationService.js
+|   |   ├── jobService.js
+|   |   ├── mlService.js
+|   |   ├── resumeAnalyzer.js
+|   |   ├── trustedJobSourceService.js
+|   |   └── jobSources/
+|   |       ├── greenhouseSource.js
+|   |       └── leverSource.js
+|   |
+|   ├── package.json
+|   └── server.js
+|
 ├── frontend/
-│   ├── node_modules/
-│   ├── src/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   │   ├── HomePage.jsx
-│   │   │   └── ResultsPage.jsx
-│   │   ├── styles/
-│   │   ├── utils/
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   ├── index.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── package.json
-│   ├── package-lock.json
-│   └── vite.config.js
-├── venv/
-├── .env
+|   ├── src/
+|   |   ├── components/
+|   |   |   ├── auth/
+|   |   |   ├── dashboard/
+|   |   |   ├── landing/
+|   |   |   ├── layout/
+|   |   |   └── results/
+|   |   |
+|   |   ├── pages/
+|   |   |   ├── ApplyJobs.jsx
+|   |   |   ├── Dashboard.jsx
+|   |   |   ├── Home.jsx
+|   |   |   ├── Login.jsx
+|   |   |   ├── Profile.jsx
+|   |   |   ├── Register.jsx
+|   |   |   └── Results.jsx
+|   |   |
+|   |   ├── services/
+|   |   |   └── api.js
+|   |   ├── App.jsx
+|   |   └── main.jsx
+|   |
+|   ├── package.json
+|   └── vite.config.js
+|
+├── ml-service/
+|   ├── app.py
+|   ├── matcher.py
+|   ├── requirements.txt
+|   ├── test_job_analysis.py
+|   └── test_matcher.py
+|
 ├── .gitignore
-├── backend.log
-├── frontend.log
-├── job_scraper.db
-├── requirements.txt
-├── setup.bat
-└── start.bat
+└── README.md
+
+
+---
+
+## Installation & Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/TanviThumu/Job-Sphere.git
+cd Job-Sphere
 ```
 
-## Architecture
+### 2. Backend Setup
 
-The project follows a client-server architecture:
+```bash
+cd backend
+npm install
+```
 
-- **Backend**: Built with FastAPI (Python) and SQLAlchemy for ORM. It exposes RESTful APIs for job data and scraping operations.
-- **Frontend**: Built with React (using Vite) and JavaScript (JSX). It consumes the backend APIs to display job listings.
-- **Database**: SQLite (job_scraper.db) for storing job data.
+Create a `.env` file inside the `backend` folder:
 
-### Backend Components
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
+PORT=5000
+```
 
-1. **API Layer** (`backend/api/`):
-    - Defines routes for job search and scraping triggers.
-    - Uses Pydantic models for request/response validation.
+Start the backend:
 
-2. **Database Layer** (`backend/database/`):
-    - SQLAlchemy models for Job entities.
-    - Database initialization and session management.
+```bash
+node server.js
+```
 
-3. **Scrapers** (`backend/scrapers/`):
-    - Modules for scraping job listings from various sources (e.g., LinkedIn, Indeed).
+Backend:
 
-4. **Parsers** (`backend/parsers/`):
-    - Utilities to parse raw scraped data into structured format.
+```text
+http://localhost:5000
+```
 
-5. **Services** (`backend/services/`):
-    - Business logic for job processing, filtering, and storage.
+### 3. Frontend Setup
 
-6. **Configuration** (`backend/config/`):
-    - Database connection setup.
+Open another terminal:
 
-7. **Main Entry Point** (`backend/main.py`):
-    - FastAPI application setup, middleware, and event handlers.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### Frontend Components
+Frontend:
 
-1. **Pages** (`frontend/src/pages/`):
-    - `HomePage.jsx`: Landing page with search form.
-    - `ResultsPage.jsx`: Displays search results and job details.
+```text
+http://localhost:5173
+```
 
-2. **Hooks** (`frontend/src/hooks/`):
-    - Custom React hooks for data fetching and state management.
+### 4. ML Service Setup
 
-3. **Styles** (`frontend/src/styles/`):
-    - CSS modules or styled components for styling.
+Open another terminal:
 
-4. **Utilities** (`frontend/src/utils/`):
-    - Helper functions for API calls, data formatting, etc.
+```bash
+cd ml-service
+python -m venv venv
+```
 
-5. **Entry Points**:
-    - `main.jsx`: ReactDOM.render entry point.
-    - `App.jsx`: Root component with routing.
+Activate the virtual environment on Windows:
 
-## Pipeline
+```powershell
+venv\Scripts\activate
+```
 
-1. **Setup**:
-    - Run `setup.bat` to:
-        - Check for Python and Node.js.
-        - Create a Python virtual environment and install dependencies.
-        - Install Node.js dependencies.
-        - Initialize the database schema (no seed data - uses real-time scraping).
-        - Initialize the database with seed data.
+Install dependencies:
 
-2. **Starting the Application**:
-    - Run `start.bat` to:
-        - Start the backend FastAPI server (via Uvicorn) on `http://localhost:8000`.
-        - Start the frontend Vite development server on `http://localhost:5173`.
+```bash
+pip install -r requirements.txt
+```
 
-3. **Data Flow (Real-Time)**:
-    - User enters search criteria on the HomePage and submits.
-    - Frontend sends a GET request to `/api/jobs?keyword=X&location=Y` on the backend.
-    - Backend **immediately runs all scrapers in parallel** to fetch live job data from configured sources.
-    - Scrapers run concurrently (timeout: 12 seconds per scraper) for optimal performance.
-    - Scraped data is parsed, validated, and stored in the database.
-    - Results are returned to the frontend in real-time (within ~12 seconds).
-    - User can filter results by platform, job type, experience level, and salary range.
-3. **Data Flow**:
-    - User enters search criteria on the HomePage and submits.
-    - Frontend sends a GET request to `/api/jobs/search` on the backend.
-    - Backend queries the database for matching jobs and returns them.
-    - If the database is empty or stale, the user can trigger a scrape via the `/api/scrape` endpoint.
-    - Scraping jobs run in the background (or asynchronously) to fetch new job listings from configured sources.
-    - Scraped data is parsed, validated, and stored in the database.
-    - The frontend periodically polls or receives updates to display the latest jobs.
+Start the ML service:
 
-4. **API Endpoints**:
-    - `GET /`: API health check.
-    - `GET /health`: Backend health check.
-    - `GET /api/jobs`: Search and scrape jobs with query parameters (real-time).
-    - `GET /api/jobs/{job_id}`: Get a specific job by ID.
-    - `GET /api/jobs/platforms/list`: Get available job platforms.
-    - `POST /api/jobs`: Create a new job listing.
-    - `PUT /api/jobs/{job_id}`: Update a job listing.
-    - `DELETE /api/jobs/{job_id}`: Soft delete a job listing.
+```bash
+uvicorn app:app --reload
+```
 
-## Key Features
+ML service:
 
-- **Real-Time Scraping**: Jobs are scraped on-demand when users search, ensuring always fresh data.
-- **Parallel Scraping**: All scrapers run concurrently with asyncio for maximum performance.
-- **Multi-Platform**: Search across LinkedIn, Indeed, RemoteOK, Remotive, and Glassdoor simultaneously.
-- **Smart Filtering**: Filter by job type, experience level, salary range, and specific platforms.
-- **Optimized Performance**: Minimal retry delays, efficient async operations, reduced HTTP timeouts.
+```text
+http://127.0.0.1:8000
+```
 
-## Implementation Details
+---
 
-### Backend
+## Running the Complete Application
 
-- **FastAPI**: Chosen for its asynchronous capabilities, automatic API documentation, and ease of use.
-- **SQLAlchemy**: ORM for database interactions, supporting SQLite for development.
-- **Pydantic**: For data validation and settings management.
-- **CORS Middleware**: Configured to allow frontend requests during development.
-- **Async Scrapers**: All scrapers use async/await for concurrent execution via asyncio.gather().
-- **Optimized Timeouts**: 
-  - Per-scraper timeout: 12 seconds
-  - Frontend timeout: 30 seconds
-  - Minimal retry delays (10-50ms instead of 500-1500ms)
+JobSphere requires three services:
 
-### Frontend
+### Terminal 1 — Backend
 
-- **React**: For building interactive user interfaces.
-- **Vite**: As the build tool for fast development server and optimized production builds.
-- **JavaScript (JSX)**: For component-based UI development.
-- **CSS Modules**: For scoped styling (if used) or global CSS.
-- **Real-Time Loading States**: Proper loading indicators and error handling during scraping.
+```bash
+cd backend
+node server.js
+```
 
-### Database
+### Terminal 2 — Frontend
 
-- **SQLite**: Used for simplicity in development. Can be switched to PostgreSQL or MySQL by changing the database URL in `backend/config/database.py`.
-- **Schema-Only Initialization**: No seed data is loaded - all jobs are real-time scraped.
+```bash
+cd frontend
+npm run dev
+```
 
-### Scraping
+### Terminal 3 — ML Service
 
-- **Parallel Execution**: All scrapers run concurrently using asyncio.gather().
-- **Error Recovery**: Individual scraper failures don't block other scrapers.
-- **Optimized HTTP Requests**: Async HTTP client with reduced delays and efficient connection handling.
-- **Modular Design**: Each scraper is independent and can be extended to support new sources.
-- **Data Normalization**: Raw scraped data is normalized into a consistent Job schema.
+```bash
+cd ml-service
+venv\Scripts\activate
+uvicorn app:app --reload
+```
 
-### Scraping
+Then open:
 
-- The scrapers are modular and can be extended to support new job sources.
-- Each scraper is responsible for fetching raw HTML/XML from a source and extracting job data.
-- Parsers clean and structure the extracted data into a consistent format.
+```text
+http://localhost:5173
+```
 
+---
 
+## Environment Variables
 
+The backend requires:
+
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
+PORT=5000
+```
+
+Do not commit `.env` files, API keys, passwords, or other secrets to GitHub.
+
+The project `.gitignore` excludes sensitive and generated files such as:
+
+```text
+.env
+venv/
+node_modules/
+__pycache__/
+```
+
+---
+
+## Security
+
+JobSphere includes:
+
+- JWT authentication
+- Password hashing using bcrypt
+- Protected routes
+- User-specific resource authorization
+- Request rate limiting
+- Helmet security headers
+- Restricted CORS
+- Input validation
+- Resume file type validation
+- Resume file size limits
+- Environment variable protection
+- Prompt-injection protection
+- Graceful API failure handling
+
+---
+
+## Job Ranking
+
+Job ranking considers two main components:
+
+### Role Relevance
+
+Determines how closely the job title and description relate to the user's identified target roles.
+
+### Semantic Similarity
+
+Measures the semantic relationship between the resume and job description using Sentence Transformer embeddings and cosine similarity.
+
+The two components are combined to produce the final ranking score.
+
+---
+
+## Location-Based Search
+
+JobSphere is designed to support multiple locations rather than assuming a single city.
+
+The general flow is:
+
+```text
+Broad Job Pool
+      |
+      v
+User Location Preference
+      |
+      v
+Location Filtering
+      |
+      v
+Relevant Recommendations
+```
+
+This architecture allows the system to support different cities, remote opportunities, and additional locations in the future.
+
+---
+
+## Testing
+
+Backend test scripts include:
+
+```text
+testJobSources.js
+testMLService.js
+testResumeAnalyzer.js
+testgemini.js
+```
+
+ML service tests include:
+
+```text
+test_matcher.py
+test_job_analysis.py
+```
+
+These tests help verify job-source integration, AI analysis, semantic matching, and job-ranking functionality.
+
+---
+
+## Future Scope
+
+Planned improvements include:
+
+- Job-specific missing skill detection
+- Matched skills and missing skills for every recommendation
+- Improved skill normalization
+- More advanced resume-to-job matching
+- Additional trusted job sources
+- Improved international job coverage
+- Salary estimation
+- Improved ATS analysis
+- Personalized career recommendations
+- Saved jobs
+- Application tracking
+- Job alerts
+- Improved ranking and filtering
+- Production deployment
+- Cloud-based ML service
+
+---
+
+## Objective
+
+The primary goal of JobSphere is to create a personalized job discovery platform that goes beyond traditional keyword-based job searching.
+
+By combining:
+
+```text
+Resume Analysis
+       +
+Generative AI
+       +
+Semantic Embeddings
+       +
+Role Relevance
+       +
+Trusted Job Sources
+       +
+Personalized Filtering
+```
+
+JobSphere aims to help users discover opportunities that are more closely aligned with their actual skills and career goals.
+
+---
+
+## Author
+
+**Tanvi Thumu**
+
+B.Tech — Data Science
+
+GitHub: https://github.com/TanviThumu/Job-Sphere
